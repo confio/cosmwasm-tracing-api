@@ -18,7 +18,7 @@ This API serves spans that can be queried at `/api/v1/txs`. It currently returns
 
 `localhost:4000/api/v1/txs?operationName=send_async`
 
-## Queries filtering tags
+### Queries filtering tags
 
 `localhost:4000/api/v1/txs?tags={"height":"772"}`
 
@@ -27,6 +27,6 @@ This API serves spans that can be queried at `/api/v1/txs`. It currently returns
 `localhost:4000/api/v1/txs?tags={"tx":"*signer: slay3r1pkptre7fdkl6gfrzlesjjvhxhlc3r4gmvk3r3j*"}`
 
 
-## Combining fields and tags
+### Combining fields and tags
 
 `localhost:4000/api/v1/txs?traceID=3a94a753fa4cbf199f16f98cf72c478c&tags={"tx_hash":"51B60C806E4F685C8A7FC79CBB72BF860B566B354F2C57B023407DD7AD633CB7"}`
