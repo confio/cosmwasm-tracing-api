@@ -1,8 +1,36 @@
 # CosmWasm Tracing API
 
-## Run
+## Run locally
 
-You can run this node app in dev mode or prod mode by running `npm run dev` or `npm run start`, respectively, after installing its dependencies with `npm install`.
+This app expects a reachable Elasticsearch node. It will connect to it and serve the configured span index on the specified port.
+
+### Setting up Elasticsearch
+
+From the layer-sdk repo and with Docker installed and started, run:
+
+```bash
+./scripts/build_docker.sh
+./localnode/run_elastic.sh
+cd js && npm install && npm run test
+```
+
+### Running the API
+
+Copy the `.env.sample` in the root of this repo to a new `.env.local` file. There you will be able to configure the Elasticsearch node URL, the span index, and the port this app will listen on. If you omit it, it will listen on port `4000`.
+
+Example `.env.local`:
+
+```bash
+ELASTIC_NODE_URL="http://localhost:9200"
+SPAN_INDEX="jaeger-span-YYYY-MM-DD"
+PORT=4000
+```
+
+`SPAN_INDEX` should have the corresponding `YYYY-MM-DD` of the day you ran the `./localnode/run_elastic.sh` script. You can confirm that by running:
+
+`curl http://localhost:9200/_cat/indices`
+
+Then you can start this Node app in dev mode or prod mode by running `npm run dev` or `npm run start`, respectively, after installing its dependencies with `npm install`.
 
 ## Query
 
