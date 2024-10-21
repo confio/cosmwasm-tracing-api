@@ -4,10 +4,11 @@ import { z } from "zod";
 import { elasticClient } from "../lib/elasticsearch/client";
 import { matchFields, matchTags } from "../lib/elasticsearch/queries";
 import { env } from "../lib/env";
+import { getApiTxsFromDbSpans } from "../lib/txs";
+import { DbSpan } from "../types/txs";
 
 const reqQuerySchema = z.object({
   traceID: z.optional(z.string()),
-  spanID: z.optional(z.string()),
   operationName: z.optional(z.string()),
   tags: z
     .optional(
@@ -39,7 +40,8 @@ export async function getTxs(req: Request, res: Response) {
       size: 15,
     });
 
-    const txs = result.hits.hits;
+    const spans = result.hits.hits as unknown as readonly DbSpan[];
+    const txs = getApiTxsFromDbSpans(spans);
 
     res.status(200).send({ txs });
   } catch (error: unknown) {
