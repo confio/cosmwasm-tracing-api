@@ -1,15 +1,11 @@
-import { QueryDslQueryContainer } from "@elastic/elasticsearch/lib/api/types";
 import { Request, Response } from "express";
 import { z } from "zod";
-import { elasticClient } from "../lib/elasticsearch/client";
-import { matchFields, matchTags } from "../lib/elasticsearch/queries";
+import { getAllSpans } from "../lib/elasticsearch/queries";
 import { env } from "../lib/env";
 import { getApiTxsFromDbSpans } from "../lib/txs";
-import { DbSpan } from "../types/txs";
 
 const reqQuerySchema = z.object({
-  traceID: z.optional(z.string()),
-  operationName: z.optional(z.string()),
+  searchAfter: z.optional(z.number({ coerce: true })),
   tags: z
     .optional(
       z
@@ -18,30 +14,27 @@ const reqQuerySchema = z.object({
         .pipe(z.array(z.tuple([z.string(), z.string()]))),
     )
     .transform((v) => v ?? []),
+  traceID: z.optional(z.string()),
+  operationName: z.optional(z.string()),
 });
 
 export async function getTxs(req: Request, res: Response) {
   try {
-    const { tags, ...fieldsReqQuery } = reqQuerySchema.parse(req.query);
+    const { searchAfter, tags, ...fieldsReqQuery } = reqQuerySchema.parse(
+      req.query,
+    );
 
     const fields = Object.entries(fieldsReqQuery).filter(
       (entry): entry is [string, string] => entry[1] !== undefined,
     );
 
-    const must: QueryDslQueryContainer[] = [
-      ...matchFields(fields),
-      ...matchTags(tags),
-    ];
-
-    //TODO -  add pagination
-    const result = await elasticClient.search({
-      index: env.SPAN_INDEX,
-      ...(must.length && { query: { bool: { must } } }),
-      size: 15,
-    });
-
-    const spans = result.hits.hits as unknown as readonly DbSpan[];
-    const txs = getApiTxsFromDbSpans(spans);
+    const allSpans = await getAllSpans(
+      fields,
+      tags,
+      env.TXS_PAGE_SIZE,
+      searchAfter,
+    );
+    const txs = getApiTxsFromDbSpans(allSpans);
 
     res.status(200).send({ txs });
   } catch (error: unknown) {
